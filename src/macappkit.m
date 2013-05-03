@@ -12350,3 +12350,97 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
   while ([sound isPlaying])
     mac_run_loop_run_once (kEventDurationForever);
 }
+
+
+#define WINDOW_X 800
+#define WINDOW_Y 600
+
+@interface Webber : NSObject {
+  NSWindow* window;
+}
+
+@property (retain, nonatomic) NSWindow* window;
+
+- (id) initWithStuff: (NSWindow *) w;
+
++ (BOOL)isSelectorExcludedFromWebScript:(SEL)aSelector;
+
+- (void) setWindowTitle: (NSString *) s;
+
+- (SEL) SelectorFromString: (NSString *) s;
+
+- (WebView*) createWebView;
+
+- (void) addSubview:(NSView*) v;
+
+- (void) runJS:(WebView*) wv code:(NSString*) c;
+
+- (void) removeSubview:(NSView*) v;
+
+- (id) new_instance:(NSString*) s;
+
+@end
+
+@implementation Webber
+
+@synthesize window;
+
+- (id) initWithStuff: (NSWindow *) w {
+  [super init];
+  self.window=w;
+  return self;
+}
+
+- (void) setWindowTitle: (NSString *) s {
+  [self.window setTitle:s];
+}
+
+- (SEL) SelectorFromString: (NSString*) s {
+  return NSSelectorFromString(s);
+}
+
+- (WebView*) createWebView {
+  return [[WebView alloc] initWithFrame:[[window contentView] frame]];
+}
+
+- (void) addSubview:(NSView*) v {
+  [[self.window contentView] addSubview:v];
+}
+
+- (void) runJS:(WebView*) wv code:(NSString*) c {
+  [wv stringByEvaluatingJavaScriptFromString:c];
+}
+
+- (void) removeSubview:(NSView*) v {
+  [[self.window contentView] removeSubview: v];
+}
+
+- (id) new_instance:(NSString*) class_name {
+  return [NSClassFromString(class_name) alloc];
+}
+
++ (BOOL)isSelectorExcludedFromWebScript:(SEL)aSelector { return NO; }
+
+@end
+
+NSWindow* webkit_make_window() {
+  NSWindow* window = [[[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, WINDOW_X, WINDOW_Y)
+                                                  styleMask:NSTitledWindowMask backing:NSBackingStoreBuffered defer:NO]
+                       autorelease];
+  [window cascadeTopLeftFromPoint:NSMakePoint(20,20)];
+  [window setTitle:@"foo"];
+  [window makeKeyAndOrderFront:nil];
+  id webv = [[WebView alloc] initWithFrame:[[window contentView] frame]];
+  [window setContentView:[[NSSplitView alloc] initWithFrame:[[window contentView] frame]]];
+  [[window contentView] addSubview:webv];
+  id note = [NSNotificationCenter defaultCenter];
+  [note addObserverForName:@"NSApplicationDidFinishLaunchingNotification"
+                    object:nil
+                     queue:nil
+                usingBlock:^(NSNotification *n){
+      [[webv mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.bing.com"]]];
+      [[webv windowScriptObject] setValue:[[Webber alloc] initWithStuff:window] forKey:@"W"];
+      [window makeFirstResponder:window];
+    }];
+  return CF_BRIDGING_RETAIN(window);
+}
