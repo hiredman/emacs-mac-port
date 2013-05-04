@@ -12420,7 +12420,7 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
 
 @end
 
-WebView* 
+Lisp_Object 
 webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int top_y) {
   struct frame *f = XFRAME(frame);
   EmacsFrameController* e = FRAME_MAC_WINDOW (f);
@@ -12430,7 +12430,9 @@ webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int
   [[window contentView] addSubview:webv];
   [[webv windowScriptObject] setValue:[[Webber alloc] initWithStuff:window] forKey:@"W"];
   [[webv mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.bing.com"]]];
-  return CF_BRIDGING_RETAIN(webv);
+  struct Lisp_Save_Value *s;
+  s->pointer=CF_BRIDGING_RETAIN(webv);
+  return s;
 }
 
 DEFUN("webkit-make-window", Fwebkit_make_window, Swebkit_make_window, 5, 5, 0,
