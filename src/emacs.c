@@ -1141,6 +1141,8 @@ Using an Emacs configured with --with-x-toolkit=lucid does not have this problem
       syms_of_alloc ();
       /* Before syms_of_coding because it initializes Qcharsetp.  */
       syms_of_charset ();
+      /**/
+      syms_of_macappkit();
       /* Before init_window_once, because it sets up the
 	 Vcoding_system_hash_table.  */
       syms_of_coding ();	/* This should be after syms_of_fileio.  */

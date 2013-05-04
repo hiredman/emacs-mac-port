@@ -12352,9 +12352,6 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
 }
 
 
-#define WINDOW_X 800
-#define WINDOW_Y 600
-
 @interface Webber : NSObject {
   NSWindow* window;
 }
@@ -12423,24 +12420,28 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
 
 @end
 
-NSWindow* webkit_make_window() {
-  NSWindow* window = [[[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, WINDOW_X, WINDOW_Y)
-                                                  styleMask:NSTitledWindowMask backing:NSBackingStoreBuffered defer:NO]
-                       autorelease];
-  [window cascadeTopLeftFromPoint:NSMakePoint(20,20)];
-  [window setTitle:@"foo"];
-  [window makeKeyAndOrderFront:nil];
-  id webv = [[WebView alloc] initWithFrame:[[window contentView] frame]];
-  [window setContentView:[[NSSplitView alloc] initWithFrame:[[window contentView] frame]]];
+WebView* 
+webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int top_y) {
+  struct frame *f = XFRAME(frame);
+  EmacsFrameController* e = FRAME_MAC_WINDOW (f);
+  NSWindow* emacs_window = e->emacsWindow;
+  NSWindow* window = emacs_window;
+  WebView* webv = [[WebView alloc] initWithFrame:NSMakeRect(bottom_x, bottom_y, top_x, top_y)];
   [[window contentView] addSubview:webv];
-  id note = [NSNotificationCenter defaultCenter];
-  [note addObserverForName:@"NSApplicationDidFinishLaunchingNotification"
-                    object:nil
-                     queue:nil
-                usingBlock:^(NSNotification *n){
-      [[webv mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.bing.com"]]];
-      [[webv windowScriptObject] setValue:[[Webber alloc] initWithStuff:window] forKey:@"W"];
-      [window makeFirstResponder:window];
-    }];
-  return CF_BRIDGING_RETAIN(window);
+  [[webv windowScriptObject] setValue:[[Webber alloc] initWithStuff:window] forKey:@"W"];
+  [[webv mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.bing.com"]]];
+  return CF_BRIDGING_RETAIN(webv);
+}
+
+DEFUN("webkit-make-window", Fwebkit_make_window, Swebkit_make_window, 5, 5, 0,
+      doc:/* throw up a webkit view*/)
+  (Lisp_Object frame, Lisp_Object bottom_x, Lisp_Object bottom_y, Lisp_Object top_x, Lisp_Object top_y)
+{
+  return webkit_make_window(frame, XINT(bottom_x), XINT(bottom_y), XINT(top_x), XINT(top_y));
+}
+
+void
+syms_of_macappkit()
+{
+  defsubr (&Swebkit_make_window);
 }
