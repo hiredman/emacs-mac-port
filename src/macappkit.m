@@ -12475,10 +12475,25 @@ DEFUN("webkit-goto", Fwebkit_goto, Swebkit_goto, 2, 2, 0,
   return Qnil;
 }
 
+DEFUN("nu", Fnu, Snu, 1, 1, 0,
+      doc:/* throw up a webkit view*/)
+  (Lisp_Object nulisp)
+{
+  struct Lisp_String* s = XSTRING(nulisp);
+  char* curl = s->data;
+  NSString* nsurl = [NSString stringWithUTF8String:curl];
+  id parser = [Nu parser];
+  id code  = [parser parse:nsurl];
+  id result = [parser eval:code];
+  return Qnil;
+}
+
+
 void
 syms_of_macappkit()
 {
   defsubr (&Swebkit_make_window);
   defsubr (&Swebkit_kill_window);
   defsubr (&Swebkit_goto);
+  defsubr (&Snu);
 }
