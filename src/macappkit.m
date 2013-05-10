@@ -12421,7 +12421,8 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
 @end
 
 Lisp_Object 
-webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int top_y) {
+webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int top_y) 
+{
   struct frame *f = XFRAME(frame);
   EmacsFrameController* e = FRAME_MAC_WINDOW (f);
   NSWindow* emacs_window = e->emacsWindow;
@@ -12430,9 +12431,8 @@ webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int
   [[window contentView] addSubview:webv];
   [[webv windowScriptObject] setValue:[[Webber alloc] initWithStuff:window] forKey:@"W"];
   [[webv mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.bing.com"]]];
-  struct Lisp_Save_Value *s;
-  s->pointer=CF_BRIDGING_RETAIN(webv);
-  return s;
+  [[window contentView] becomeFirstResponder];
+  return make_save_value(CF_BRIDGING_RETAIN(webv), 5);
 }
 
 DEFUN("webkit-make-window", Fwebkit_make_window, Swebkit_make_window, 5, 5, 0,
@@ -12442,8 +12442,41 @@ DEFUN("webkit-make-window", Fwebkit_make_window, Swebkit_make_window, 5, 5, 0,
   return webkit_make_window(frame, XINT(bottom_x), XINT(bottom_y), XINT(top_x), XINT(top_y));
 }
 
+
+#define BIND_WEBV(n,sv) WebView* n = (WebView*)(XSAVE_VALUE(sv)->pointer)
+
+Lisp_Object 
+webkit_kill_window(Lisp_Object wk)
+{
+  BIND_WEBV(v,wk);
+  [v removeFromSuperview];
+  [v release];
+  return Qnil;
+}
+
+DEFUN("webkit-kill-window", Fwebkit_kill_window, Swebkit_kill_window, 1, 1, 0,
+      doc:/* throw up a webkit view*/)
+  (Lisp_Object wk)
+{
+  return webkit_kill_window(wk);
+}
+
+DEFUN("webkit-goto", Fwebkit_goto, Swebkit_goto, 2, 2, 0,
+      doc:/* throw up a webkit view*/)
+  (Lisp_Object wk, Lisp_Object url)
+{
+  BIND_WEBV(webv,wk);
+  struct Lisp_String* s = XSTRING(url);
+  char* curl = s->data;
+  NSString* nsurl = [NSString stringWithUTF8String:curl];
+  [[webv mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:nsurl]]];
+  return Qnil;
+}
+
 void
 syms_of_macappkit()
 {
   defsubr (&Swebkit_make_window);
+  defsubr (&Swebkit_kill_window);
+  defsubr (&Swebkit_goto);
 }
