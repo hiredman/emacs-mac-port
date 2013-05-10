@@ -43,6 +43,8 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #import <objc/runtime.h>
 #endif
 
+#import "../nu/Nu.framework/Headers/Nu.h"
+
 #if USE_ARC
 #define MRC_RETAIN(receiver)		((id) (receiver))
 #define MRC_RELEASE(receiver)
@@ -12422,6 +12424,7 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
 
 Lisp_Object 
 webkit_make_window(Lisp_Object frame, int bottom_x, int bottom_y, int top_x, int top_y) {
+  id parser = [Nu parser];
   struct frame *f = XFRAME(frame);
   EmacsFrameController* e = FRAME_MAC_WINDOW (f);
   NSWindow* emacs_window = e->emacsWindow;

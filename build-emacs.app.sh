@@ -1,5 +1,11 @@
 #!/bin/sh
 
+cd nu
+make
+./mininush tools/nuke
+cd ../
+DYLD_LIBRARY_PATH=$PWD/nu/Nu.framework
+
 # Usage: 
 # 1. cp build-emacs.app.sh to the top directory of emacs source tree.
 # 2. run "./build-emacs.app.sh"
@@ -36,6 +42,17 @@ rm -rf $installprefix/libexec
 # no longer necessary issue#17
 # rm $app_dir/../MacOS/Emacs
 # ln $app_dir/../MacOS/bin/emacs $app_dir/../MacOS/Emacs
+
+echo "here"
+
+mkdir -p $app_dir/../Frameworks
+cp -R nu/Nu.framework $app_dir/../Frameworks/
+
+install_name_tool -change \
+    "Nu.framework/Versions/A/Nu" \
+    "@executable_path/../Frameworks/Nu.framework/Versions/A/Nu" \
+    $app_dir/../MacOS/Emacs
+
 
 echo 'Done! Find your Emacs.app at '$installprefix'.'
 

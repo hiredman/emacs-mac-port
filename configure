@@ -24823,7 +24823,7 @@ $as_echo "before 10.5" >&6; }
      libs_macgui=
      headerpad_extra=690
    fi
-   LD_SWITCH_SYSTEM_TEMACS="-fno-pie -prebind $libs_macgui -Xlinker -headerpad -Xlinker $headerpad_extra"
+   LD_SWITCH_SYSTEM_TEMACS="-fno-pie -prebind $libs_macgui -F $srcdir/nu -framework Nu -Xlinker -headerpad -Xlinker $headerpad_extra"
 
    ## This is here because src/Makefile.in did some extra fiddling around
    ## with LD_SWITCH_SYSTEM.  The cpp logic was:
